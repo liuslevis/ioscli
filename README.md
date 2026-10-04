@@ -1,7 +1,7 @@
-# iphone-muse
+# ioscli
 
 A minimal CLI to screenshot, click, and enter text in the **iPhone Mirroring**
-window on macOS.
+App on macOS.
 
 ## Install
 
