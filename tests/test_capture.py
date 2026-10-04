@@ -1,6 +1,6 @@
 from PIL import Image
 
-from iphone_muse.capture import screen_bbox
+from ioscli.capture import screen_bbox
 
 
 def test_screen_bbox_uses_alpha_not_screen_brightness() -> None:
@@ -17,4 +17,3 @@ def test_screen_bbox_handles_rounded_transparent_corners() -> None:
     image.putpixel((8, 7), (0, 0, 0, 255))
 
     assert screen_bbox(image) == (4, 2, 9, 8)
-

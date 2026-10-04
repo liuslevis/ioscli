@@ -3,6 +3,12 @@
 A minimal CLI to screenshot, click, and enter text in the **iPhone Mirroring**
 App on macOS.
 
+For example, in Codex / Claude Code / Copilot / Cursor, you can ask:
+```
+Use ioscli tool (@README.md) open wechat - 文件传输助手 - send a "hello world" message
+```
+
+
 ## Install
 
 ```bash
@@ -55,7 +61,3 @@ ready, then sends Command-1 through the HID event tap.
 
 The screenshot command uses the window's transparency to identify the exact
 phone-screen bounds, so dark or completely black screens are cropped correctly.
-
-## Example
-
-![screenshot](screenshot/example.jpg)

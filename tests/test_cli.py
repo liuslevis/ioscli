@@ -1,4 +1,4 @@
-from iphone_muse import cli
+from ioscli import cli
 
 
 def test_input_command_passes_text_to_input_text(monkeypatch) -> None:

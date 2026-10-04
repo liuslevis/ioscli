@@ -1,7 +1,7 @@
 import pytest
 
-from iphone_muse.input import map_phone_to_screen
-from iphone_muse.window import Window
+from ioscli.input import map_phone_to_screen
+from ioscli.window import Window
 
 
 def test_maps_retina_pixels_to_macos_points() -> None:

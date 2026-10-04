@@ -1,5 +1,5 @@
-from iphone_muse import input as input_module
-from iphone_muse.window import Window
+from ioscli import input as input_module
+from ioscli.window import Window
 from PIL import Image
 
 
