@@ -3,10 +3,10 @@
 A minimal CLI to screenshot, click, and enter text in the **iPhone Mirroring**
 App on macOS.
 
-For example, in Codex / Claude Code / Copilot / Cursor, you can ask:
-```
-Use ioscli tool (@README.md) open wechat - 文件传输助手 - send a "hello world" message
-```
+For example, in Codex / Claude Code / Copilot / Cursor, you can ask for `Use ioscli tool (@README.md) open wechat - 文件传输助手 - send a "hello world" message`.
+
+
+https://github.com/user-attachments/assets/3b931f50-aeaa-4ddb-a234-04da6617a44c
 
 
 ## Install
