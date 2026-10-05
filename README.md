@@ -113,5 +113,9 @@ method is now active.
 The home command activates iPhone Mirroring, waits for the window to become
 ready, then sends Command-1 through the HID event tap.
 
+The delete command activates iPhone Mirroring, then presses the physical
+Delete (Backspace) key `-n`/`--times` times (default 1) to remove characters
+before the cursor in the focused text field.
+
 The screenshot command uses the window's transparency to identify the exact
 phone-screen bounds, so dark or completely black screens are cropped correctly.

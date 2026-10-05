@@ -8,9 +8,10 @@ from .capture import save_screenshot
 from .input import (
     click,
     go_home,
-    input_english,
+    input_en,
     input_zh,
     input_text,
+    press_delete,
     press_enter,
     scroll,
     switch_input_method,
@@ -88,6 +89,17 @@ def build_parser() -> argparse.ArgumentParser:
         "enter",
         help="Press Enter in the iPhone Mirroring window",
     )
+    delete_parser = subparsers.add_parser(
+        "delete",
+        help="Push the Delete (Backspace) button 1 or n times",
+    )
+    delete_parser.add_argument(
+        "-n",
+        "--times",
+        type=int,
+        default=1,
+        help="Number of times to press Delete (default: 1)",
+    )
     subparsers.add_parser(
         "switch_input_method",
         help=(
@@ -125,6 +137,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             input_en(args.text)
         elif args.command == "enter":
             press_enter()
+        elif args.command == "delete":
+            press_delete(args.times)
         elif args.command == "switch_input_method":
             print(switch_input_method())
         else:

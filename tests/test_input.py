@@ -243,6 +243,68 @@ def test_press_enter_activates_app_and_sends_return_key(monkeypatch) -> None:
     assert calls == [("activate", 42), ("press", 36)]
 
 
+def test_press_delete_defaults_to_single_press(monkeypatch) -> None:
+    calls: list[tuple[str, object]] = []
+    window = Window(window_id=1, owner_pid=42, x=0, y=0, width=217, height=483)
+
+    monkeypatch.setattr(input_module, "find_window", lambda: window)
+    monkeypatch.setattr(
+        input_module.Quartz,
+        "CGPreflightPostEventAccess",
+        lambda: True,
+    )
+    monkeypatch.setattr(
+        input_module,
+        "_activate_app",
+        lambda pid: calls.append(("activate", pid)),
+    )
+    monkeypatch.setattr(
+        input_module,
+        "_press_key",
+        lambda key_code: calls.append(("press", key_code)),
+    )
+
+    input_module.press_delete()
+
+    assert calls == [("activate", 42), ("press", 51)]
+
+
+def test_press_delete_presses_n_times(monkeypatch) -> None:
+    calls: list[tuple[str, object]] = []
+    window = Window(window_id=1, owner_pid=42, x=0, y=0, width=217, height=483)
+
+    monkeypatch.setattr(input_module, "find_window", lambda: window)
+    monkeypatch.setattr(
+        input_module.Quartz,
+        "CGPreflightPostEventAccess",
+        lambda: True,
+    )
+    monkeypatch.setattr(
+        input_module,
+        "_activate_app",
+        lambda pid: calls.append(("activate", pid)),
+    )
+    monkeypatch.setattr(
+        input_module,
+        "_press_key",
+        lambda key_code: calls.append(("press", key_code)),
+    )
+
+    input_module.press_delete(3)
+
+    assert calls == [
+        ("activate", 42),
+        ("press", 51),
+        ("press", 51),
+        ("press", 51),
+    ]
+
+
+def test_press_delete_rejects_non_positive_times() -> None:
+    with pytest.raises(ValueError):
+        input_module.press_delete(0)
+
+
 def test_press_key_sends_key_down_and_key_up(monkeypatch) -> None:
     created: list[tuple[int, bool]] = []
     posted: list[tuple[int, bool]] = []

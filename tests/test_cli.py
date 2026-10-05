@@ -33,6 +33,22 @@ def test_enter_command_presses_enter(monkeypatch) -> None:
     assert calls == [None]
 
 
+def test_delete_command_defaults_to_one_press(monkeypatch) -> None:
+    calls: list[int] = []
+    monkeypatch.setattr(cli, "press_delete", calls.append)
+
+    assert cli.main(["delete"]) == 0
+    assert calls == [1]
+
+
+def test_delete_command_passes_times(monkeypatch) -> None:
+    calls: list[int] = []
+    monkeypatch.setattr(cli, "press_delete", calls.append)
+
+    assert cli.main(["delete", "-n", "10"]) == 0
+    assert calls == [10]
+
+
 def test_switch_input_method_command_prints_screenshot_path(monkeypatch, capsys) -> None:
     monkeypatch.setattr(
         cli,

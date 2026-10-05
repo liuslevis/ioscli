@@ -12,6 +12,7 @@ from .capture import capture_window, save_screenshot, screen_bbox
 from .window import Window, find_window
 
 _COMMAND_KEY_CODE = 55
+_DELETE_KEY_CODE = 51
 _FN_KEY_CODE = 63
 _ONE_KEY_CODE = 18
 _RETURN_KEY_CODE = 36
@@ -203,6 +204,26 @@ def press_enter() -> None:
 
     _activate_app(window.owner_pid)
     _press_key(_RETURN_KEY_CODE)
+
+
+def press_delete(times: int = 1) -> None:
+    """Press the physical Delete (Backspace) key `times` times.
+
+    Useful for clearing a few characters from a focused text field without
+    needing to select text first.
+    """
+    if times < 1:
+        raise ValueError("times must be at least 1")
+
+    window = find_window()
+    if not Quartz.CGPreflightPostEventAccess():
+        raise RuntimeError(
+            "Accessibility permission is required to send Delete to iPhone Mirroring"
+        )
+
+    _activate_app(window.owner_pid)
+    for _ in range(times):
+        _press_key(_DELETE_KEY_CODE)
 
 
 def switch_input_method() -> Path:
