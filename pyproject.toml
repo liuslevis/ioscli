@@ -9,6 +9,7 @@ dependencies = [
     "pyobjc-framework-applicationservices>=10.0",
     "pyobjc-framework-Cocoa>=10.0",
     "pyobjc-framework-Quartz>=10.0",
+    "pypinyin>=0.55.0",
 ]
 
 [project.scripts]

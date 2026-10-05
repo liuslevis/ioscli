@@ -35,7 +35,14 @@ uv run ioscli scroll left at 200 500
 uv run ioscli scroll right at 200 500
 
 # Paste text into the currently focused field on the phone
-uv run ioscli input "Hello from macOS"
+uv run ioscli input "你好 Hello from macOS"
+
+# Enter Chinese text when paste (cmd+v) fails; accepts hanzi or pinyin
+uv run ioscli input_chinese "你好"
+
+# Enter ASCII text when paste (cmd+v) fails; accepts ascii only
+uv run ioscli input_ascii "Hello~ from macOS"
+
 
 # Press Enter
 uv run ioscli enter
@@ -50,6 +57,15 @@ uv run ioscli home
 The input command copies the provided text to the macOS clipboard, activates
 iPhone Mirroring, and sends Command-V. Focus a text field on the phone before
 running it.
+
+The input_chinese command is a fallback for fields that reject Command-V.
+iPhone Mirroring forwards physical key codes (not pasted Unicode) to iOS, so
+pasting/typing Chinese characters directly does not work; instead,
+input_chinese romanizes the given text to pinyin with `pypinyin` (text
+already in pinyin is left as-is), activates iPhone Mirroring, types the
+pinyin as individual keystrokes, then presses Space so the iOS Pinyin
+keyboard commits its first suggested candidate. Focus a text field on the
+phone before running it.
 
 The scroll command focuses the iPhone Mirroring window through the macOS
 Accessibility API. Vertical scrolling sends a phased sequence of pixel scroll

@@ -5,7 +5,15 @@ import sys
 from collections.abc import Sequence
 
 from .capture import save_screenshot
-from .input import click, go_home, input_text, press_enter, scroll
+from .input import (
+    click,
+    go_home,
+    input_ascii,
+    input_chinese,
+    input_text,
+    press_enter,
+    scroll,
+)
 from .window import APP_NAME
 
 
@@ -51,6 +59,30 @@ def build_parser() -> argparse.ArgumentParser:
     )
     input_parser.add_argument("text", help="Text to paste")
 
+    input_chinese_parser = subparsers.add_parser(
+        "input_chinese",
+        help=(
+            "Type Chinese/pinyin + Space to enter Chinese text when paste "
+            "(cmd+v) fails"
+        ),
+    )
+    input_chinese_parser.add_argument(
+        "text",
+        help="Chinese text or pinyin to type, e.g. '你好' or 'ni hao'",
+    )
+
+    input_ascii_parser = subparsers.add_parser(
+        "input_ascii",
+        help=(
+            "Type ASCII text + keystrokes to enter text when paste "
+            "(cmd+v) fails; accepts ascii only"
+        ),
+    )
+    input_ascii_parser.add_argument(
+        "text",
+        help="ASCII text to type, e.g. 'Hello~ from macOS'",
+    )
+
     subparsers.add_parser(
         "enter",
         help="Press Enter in the iPhone Mirroring window",
@@ -79,6 +111,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
         elif args.command == "input":
             input_text(args.text)
+        elif args.command == "input_chinese":
+            input_chinese(args.text)
+        elif args.command == "input_ascii":
+            input_ascii(args.text)
         elif args.command == "enter":
             press_enter()
         else:

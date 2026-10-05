@@ -5,6 +5,7 @@ import time
 import AppKit
 import ApplicationServices as AX
 import Quartz
+from pypinyin import lazy_pinyin
 
 from .capture import capture_window, screen_bbox
 from .window import Window, find_window
@@ -13,8 +14,37 @@ _COMMAND_KEY_CODE = 55
 _ONE_KEY_CODE = 18
 _RETURN_KEY_CODE = 36
 _SCROLL_STEPS = 12
+_SPACE_KEY_CODE = 49
 _SWIPE_WIDTH_RATIO = 0.5
 _V_KEY_CODE = 9
+
+# Physical (ANSI US QWERTY) virtual key codes. iPhone Mirroring forwards the
+# raw hardware key code to iOS, not the synthesized Unicode character, so
+# typing must use real key-down/key-up events rather than
+# CGEventKeyboardSetUnicodeString overrides.
+_APOSTROPHE_KEY_CODE = 39
+_SHIFT_KEY_CODE = 56
+_LETTER_KEY_CODES = {
+    "a": 0, "b": 11, "c": 8, "d": 2, "e": 14, "f": 3, "g": 5, "h": 4,
+    "i": 34, "j": 38, "k": 40, "l": 37, "m": 46, "n": 45, "o": 31, "p": 35,
+    "q": 12, "r": 15, "s": 1, "t": 17, "u": 32, "v": 9, "w": 13, "x": 7,
+    "y": 16, "z": 6,
+}
+_DIGIT_KEY_CODES = {
+    "1": 18, "2": 19, "3": 20, "4": 21, "5": 23,
+    "6": 22, "7": 26, "8": 28, "9": 25, "0": 29,
+}
+_PUNCTUATION_KEY_CODES = {
+    "-": 27, "=": 24, "[": 33, "]": 30, "\\": 42,
+    ";": 41, "'": _APOSTROPHE_KEY_CODE, ",": 43, ".": 47, "/": 44, "`": 50,
+}
+# Characters typed by holding Shift while pressing the unshifted key below.
+_SHIFTED_CHAR_TO_BASE = {
+    "!": "1", "@": "2", "#": "3", "$": "4", "%": "5",
+    "^": "6", "&": "7", "*": "8", "(": "9", ")": "0",
+    "_": "-", "+": "=", "{": "[", "}": "]", "|": "\\",
+    ":": ";", '"': "'", "<": ",", ">": ".", "?": "/", "~": "`",
+}
 
 
 def map_phone_to_screen(
@@ -113,6 +143,53 @@ def input_text(text: str) -> None:
     _copy_to_clipboard(text)
     _activate_app(window.owner_pid)
     _paste()
+
+
+def input_chinese(text: str) -> None:
+    """Type Chinese (or pinyin) text as physical keystrokes, then Space.
+
+    Use this as a fallback when `input_text` (clipboard paste) fails, since
+    some fields inside iPhone Mirroring do not accept Command-V. iPhone
+    Mirroring forwards physical key codes (not pasted Unicode) to iOS, so
+    `text` is first romanized to pinyin (Chinese characters pass through
+    `pypinyin`; text that is already pinyin is left as-is) and then typed as
+    individual keystrokes. The trailing Space mirrors what the iOS Pinyin
+    keyboard does to confirm its first suggested candidate.
+    """
+    window = find_window()
+    if not Quartz.CGPreflightPostEventAccess():
+        raise RuntimeError(
+            "Accessibility permission is required to type into iPhone Mirroring"
+        )
+
+    pinyin = "".join(lazy_pinyin(text))
+    _activate_app(window.owner_pid)
+    _type_text(pinyin)
+    _press_key(_SPACE_KEY_CODE)
+
+
+def input_ascii(text: str) -> None:
+    """Type ASCII text as physical keystrokes, without romanization or a
+    trailing Space.
+
+    Use this as a fallback when `input_text` (clipboard paste) fails, since
+    some fields inside iPhone Mirroring do not accept Command-V. Like
+    `input_chinese`, iPhone Mirroring forwards physical key codes (not
+    pasted Unicode) to iOS, so `text` is typed as individual keystrokes;
+    unlike `input_chinese`, it is sent as-is (no pinyin conversion or
+    trailing Space) and only printable ASCII is supported.
+    """
+    if not text.isascii():
+        raise ValueError("input_ascii only supports ASCII text")
+
+    window = find_window()
+    if not Quartz.CGPreflightPostEventAccess():
+        raise RuntimeError(
+            "Accessibility permission is required to type into iPhone Mirroring"
+        )
+
+    _activate_app(window.owner_pid)
+    _type_ascii_text(text)
 
 
 def press_enter() -> None:
@@ -392,11 +469,61 @@ def _paste() -> None:
         time.sleep(0.02)
 
 
-def _press_key(key_code: int) -> None:
+def _type_text(text: str) -> None:
+    for character in text:
+        key_code = _key_code_for_character(character)
+        _press_key(key_code)
+
+
+def _key_code_for_character(character: str) -> int:
+    lowered = character.lower()
+    if lowered in _LETTER_KEY_CODES:
+        return _LETTER_KEY_CODES[lowered]
+    if character == " ":
+        return _SPACE_KEY_CODE
+    if character == "'":
+        return _APOSTROPHE_KEY_CODE
+    raise ValueError(
+        f"Cannot type {character!r} as a physical keystroke; "
+        "input_chinese only supports pinyin letters, spaces, and apostrophes"
+    )
+
+
+def _type_ascii_text(text: str) -> None:
+    for character in text:
+        key_code, shift = _key_code_for_ascii_character(character)
+        _press_key(key_code, shift)
+
+
+def _key_code_for_ascii_character(character: str) -> tuple[int, bool]:
+    lowered = character.lower()
+    if lowered in _LETTER_KEY_CODES:
+        return _LETTER_KEY_CODES[lowered], character.isupper()
+    if character == " ":
+        return _SPACE_KEY_CODE, False
+    if character in _DIGIT_KEY_CODES:
+        return _DIGIT_KEY_CODES[character], False
+    if character in _PUNCTUATION_KEY_CODES:
+        return _PUNCTUATION_KEY_CODES[character], False
+    if character in _SHIFTED_CHAR_TO_BASE:
+        base = _SHIFTED_CHAR_TO_BASE[character]
+        key_code = _DIGIT_KEY_CODES.get(base) or _PUNCTUATION_KEY_CODES[base]
+        return key_code, True
+    raise ValueError(
+        f"Cannot type {character!r} as a physical keystroke; "
+        "input_ascii only supports printable ASCII characters"
+    )
+
+
+def _press_key(key_code: int, shift: bool = False) -> None:
     down = Quartz.CGEventCreateKeyboardEvent(None, key_code, True)
     up = Quartz.CGEventCreateKeyboardEvent(None, key_code, False)
     if down is None or up is None:
         raise RuntimeError("Failed to create keyboard events")
+
+    if shift:
+        Quartz.CGEventSetFlags(down, Quartz.kCGEventFlagMaskShift)
+        Quartz.CGEventSetFlags(up, Quartz.kCGEventFlagMaskShift)
 
     for event in (down, up):
         Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)

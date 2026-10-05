@@ -9,6 +9,22 @@ def test_input_command_passes_text_to_input_text(monkeypatch) -> None:
     assert values == ["hello world"]
 
 
+def test_input_chinese_command_passes_pinyin_to_input_chinese(monkeypatch) -> None:
+    values: list[str] = []
+    monkeypatch.setattr(cli, "input_chinese", values.append)
+
+    assert cli.main(["input_chinese", "ni hao"]) == 0
+    assert values == ["ni hao"]
+
+
+def test_input_ascii_command_passes_text_to_input_ascii(monkeypatch) -> None:
+    values: list[str] = []
+    monkeypatch.setattr(cli, "input_ascii", values.append)
+
+    assert cli.main(["input_ascii", "Hello~ from macOS"]) == 0
+    assert values == ["Hello~ from macOS"]
+
+
 def test_enter_command_presses_enter(monkeypatch) -> None:
     calls: list[None] = []
     monkeypatch.setattr(cli, "press_enter", lambda: calls.append(None))
