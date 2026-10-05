@@ -8,6 +8,13 @@ For example, in Codex / Claude Code / Copilot / Cursor, you can ask for `Use ios
 
 https://github.com/user-attachments/assets/3b931f50-aeaa-4ddb-a234-04da6617a44c
 
+or `handle shrimp return in e-comerce app PDD`
+
+https://github.com/user-attachments/assets/a981be64-b09c-41b4-a4c2-a9b9bb2d4804
+
+or `check flight ticket price from shanghai to dali during 10/1 to 10/7`
+
+https://github.com/user-attachments/assets/f8e0c20a-7989-4be9-baa0-d19bbfd4e1c4
 
 ## Install
 
