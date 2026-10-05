@@ -1,16 +1,18 @@
 from __future__ import annotations
 
 import time
+from pathlib import Path
 
 import AppKit
 import ApplicationServices as AX
 import Quartz
 from pypinyin import lazy_pinyin
 
-from .capture import capture_window, screen_bbox
+from .capture import capture_window, save_screenshot, screen_bbox
 from .window import Window, find_window
 
 _COMMAND_KEY_CODE = 55
+_FN_KEY_CODE = 63
 _ONE_KEY_CODE = 18
 _RETURN_KEY_CODE = 36
 _SCROLL_STEPS = 12
@@ -145,7 +147,7 @@ def input_text(text: str) -> None:
     _paste()
 
 
-def input_chinese(text: str) -> None:
+def input_zh(text: str) -> None:
     """Type Chinese (or pinyin) text as physical keystrokes, then Space.
 
     Use this as a fallback when `input_text` (clipboard paste) fails, since
@@ -168,19 +170,19 @@ def input_chinese(text: str) -> None:
     _press_key(_SPACE_KEY_CODE)
 
 
-def input_ascii(text: str) -> None:
+def input_en(text: str) -> None:
     """Type ASCII text as physical keystrokes, without romanization or a
     trailing Space.
 
     Use this as a fallback when `input_text` (clipboard paste) fails, since
     some fields inside iPhone Mirroring do not accept Command-V. Like
-    `input_chinese`, iPhone Mirroring forwards physical key codes (not
+    `input_zh`, iPhone Mirroring forwards physical key codes (not
     pasted Unicode) to iOS, so `text` is typed as individual keystrokes;
-    unlike `input_chinese`, it is sent as-is (no pinyin conversion or
+    unlike `input_zh`, it is sent as-is (no pinyin conversion or
     trailing Space) and only printable ASCII is supported.
     """
     if not text.isascii():
-        raise ValueError("input_ascii only supports ASCII text")
+        raise ValueError("input_en only supports ASCII text")
 
     window = find_window()
     if not Quartz.CGPreflightPostEventAccess():
@@ -201,6 +203,28 @@ def press_enter() -> None:
 
     _activate_app(window.owner_pid)
     _press_key(_RETURN_KEY_CODE)
+
+
+def switch_input_method() -> Path:
+    """Press the physical Fn (Globe) key to switch the iOS input method, then
+    take a screenshot so the new input method can be confirmed.
+
+    iOS switches between enabled keyboards/input methods (e.g. Chinese /
+    English) when the hardware Globe (fn) key is pressed, the same way a
+    physical external keyboard would. iPhone Mirroring forwards this key
+    code, so pressing it toggles the active input method. A screenshot is
+    then saved (same default naming as the `screenshot` command) and its
+    path is returned for confirmation.
+    """
+    window = find_window()
+    if not Quartz.CGPreflightPostEventAccess():
+        raise RuntimeError(
+            "Accessibility permission is required to send Fn to iPhone Mirroring"
+        )
+
+    _activate_app(window.owner_pid)
+    _press_key(_FN_KEY_CODE)
+    return save_screenshot()
 
 
 def go_home() -> None:
@@ -485,7 +509,7 @@ def _key_code_for_character(character: str) -> int:
         return _APOSTROPHE_KEY_CODE
     raise ValueError(
         f"Cannot type {character!r} as a physical keystroke; "
-        "input_chinese only supports pinyin letters, spaces, and apostrophes"
+        "input_zh only supports pinyin letters, spaces, and apostrophes"
     )
 
 
@@ -511,7 +535,7 @@ def _key_code_for_ascii_character(character: str) -> tuple[int, bool]:
         return key_code, True
     raise ValueError(
         f"Cannot type {character!r} as a physical keystroke; "
-        "input_ascii only supports printable ASCII characters"
+        "input_en only supports printable ASCII characters"
     )
 
 

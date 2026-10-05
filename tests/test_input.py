@@ -74,7 +74,7 @@ def test_paste_sends_physical_command_v_sequence(monkeypatch) -> None:
     assert flagged == expected[:-1]
 
 
-def test_input_chinese_romanizes_hanzi_before_typing(monkeypatch) -> None:
+def test_input_zh_romanizes_hanzi_before_typing(monkeypatch) -> None:
     calls: list[tuple[str, object]] = []
     window = Window(window_id=1, owner_pid=42, x=0, y=0, width=217, height=483)
 
@@ -100,7 +100,7 @@ def test_input_chinese_romanizes_hanzi_before_typing(monkeypatch) -> None:
         lambda key_code: calls.append(("press", key_code)),
     )
 
-    input_module.input_chinese("你好")
+    input_module.input_zh("你好")
 
     assert calls == [
         ("activate", 42),
@@ -109,7 +109,7 @@ def test_input_chinese_romanizes_hanzi_before_typing(monkeypatch) -> None:
     ]
 
 
-def test_input_chinese_leaves_pinyin_text_unchanged(monkeypatch) -> None:
+def test_input_zh_leaves_pinyin_text_unchanged(monkeypatch) -> None:
     calls: list[tuple[str, object]] = []
     window = Window(window_id=1, owner_pid=42, x=0, y=0, width=217, height=483)
 
@@ -127,7 +127,7 @@ def test_input_chinese_leaves_pinyin_text_unchanged(monkeypatch) -> None:
     )
     monkeypatch.setattr(input_module, "_press_key", lambda _key_code: None)
 
-    input_module.input_chinese("ni hao")
+    input_module.input_zh("ni hao")
 
     assert calls == [("type", "ni hao")]
 
@@ -154,7 +154,7 @@ def test_type_text_rejects_characters_without_a_physical_key(monkeypatch) -> Non
         input_module._type_text("你好")
 
 
-def test_input_ascii_types_text_without_romanization_or_space(monkeypatch) -> None:
+def test_input_en_types_text_without_romanization_or_space(monkeypatch) -> None:
     calls: list[tuple[str, object]] = []
     window = Window(window_id=1, owner_pid=42, x=0, y=0, width=217, height=483)
 
@@ -175,7 +175,7 @@ def test_input_ascii_types_text_without_romanization_or_space(monkeypatch) -> No
         lambda text: calls.append(("type", text)),
     )
 
-    input_module.input_ascii("Hello~ from macOS")
+    input_module.input_en("Hello~ from macOS")
 
     assert calls == [
         ("activate", 42),
@@ -183,9 +183,9 @@ def test_input_ascii_types_text_without_romanization_or_space(monkeypatch) -> No
     ]
 
 
-def test_input_ascii_rejects_non_ascii_text(monkeypatch) -> None:
+def test_input_en_rejects_non_ascii_text(monkeypatch) -> None:
     with pytest.raises(ValueError):
-        input_module.input_ascii("你好")
+        input_module.input_en("你好")
 
 
 def test_type_ascii_text_sends_physical_key_codes_with_shift_as_needed(
@@ -268,6 +268,45 @@ def test_press_key_sends_key_down_and_key_up(monkeypatch) -> None:
 
     assert created == [(36, True), (36, False)]
     assert posted == created
+
+
+def test_switch_input_method_activates_app_sends_fn_key_and_screenshots(
+    monkeypatch,
+) -> None:
+    calls: list[tuple[str, object]] = []
+    window = Window(window_id=1, owner_pid=42, x=0, y=0, width=217, height=483)
+    screenshot_path = input_module.Path("screenshot/20240101_000000.jpg")
+
+    monkeypatch.setattr(input_module, "find_window", lambda: window)
+    monkeypatch.setattr(
+        input_module.Quartz,
+        "CGPreflightPostEventAccess",
+        lambda: True,
+    )
+    monkeypatch.setattr(
+        input_module,
+        "_activate_app",
+        lambda pid: calls.append(("activate", pid)),
+    )
+    monkeypatch.setattr(
+        input_module,
+        "_press_key",
+        lambda key_code: calls.append(("press", key_code)),
+    )
+    monkeypatch.setattr(
+        input_module,
+        "save_screenshot",
+        lambda: calls.append(("screenshot", None)) or screenshot_path,
+    )
+
+    result = input_module.switch_input_method()
+
+    assert calls == [
+        ("activate", 42),
+        ("press", 63),
+        ("screenshot", None),
+    ]
+    assert result == screenshot_path
 
 
 def test_go_home_activates_mirroring_and_sends_command_one(monkeypatch) -> None:

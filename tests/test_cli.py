@@ -5,23 +5,23 @@ def test_input_command_passes_text_to_input_text(monkeypatch) -> None:
     values: list[str] = []
     monkeypatch.setattr(cli, "input_text", values.append)
 
-    assert cli.main(["input", "hello world"]) == 0
+    assert cli.main(["input_paste", "hello world"]) == 0
     assert values == ["hello world"]
 
 
-def test_input_chinese_command_passes_pinyin_to_input_chinese(monkeypatch) -> None:
+def test_input_zh_command_passes_pinyin_to_input_zh(monkeypatch) -> None:
     values: list[str] = []
-    monkeypatch.setattr(cli, "input_chinese", values.append)
+    monkeypatch.setattr(cli, "input_zh", values.append)
 
-    assert cli.main(["input_chinese", "ni hao"]) == 0
+    assert cli.main(["input_zh", "ni hao"]) == 0
     assert values == ["ni hao"]
 
 
-def test_input_ascii_command_passes_text_to_input_ascii(monkeypatch) -> None:
+def test_input_en_command_passes_text_to_input_en(monkeypatch) -> None:
     values: list[str] = []
-    monkeypatch.setattr(cli, "input_ascii", values.append)
+    monkeypatch.setattr(cli, "input_en", values.append)
 
-    assert cli.main(["input_ascii", "Hello~ from macOS"]) == 0
+    assert cli.main(["input_en", "Hello~ from macOS"]) == 0
     assert values == ["Hello~ from macOS"]
 
 
@@ -31,6 +31,17 @@ def test_enter_command_presses_enter(monkeypatch) -> None:
 
     assert cli.main(["enter"]) == 0
     assert calls == [None]
+
+
+def test_switch_input_method_command_prints_screenshot_path(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(
+        cli,
+        "switch_input_method",
+        lambda: "screenshot/20240101_000000.jpg",
+    )
+
+    assert cli.main(["switch_input_method"]) == 0
+    assert capsys.readouterr().out == "screenshot/20240101_000000.jpg\n"
 
 
 def test_home_command_goes_home(monkeypatch) -> None:
