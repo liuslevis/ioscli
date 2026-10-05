@@ -392,20 +392,6 @@ def _paste() -> None:
         time.sleep(0.02)
 
 
-def _type_unicode(text: str) -> None:
-    key_down = Quartz.CGEventCreateKeyboardEvent(None, 0, True)
-    key_up = Quartz.CGEventCreateKeyboardEvent(None, 0, False)
-    if key_down is None or key_up is None:
-        raise RuntimeError("Failed to create keyboard events")
-
-    Quartz.CGEventKeyboardSetUnicodeString(key_down, len(text), text)
-    Quartz.CGEventKeyboardSetUnicodeString(key_up, len(text), text)
-
-    Quartz.CGEventPost(Quartz.kCGHIDEventTap, key_down)
-    time.sleep(0.02)
-    Quartz.CGEventPost(Quartz.kCGHIDEventTap, key_up)
-
-
 def _press_key(key_code: int) -> None:
     down = Quartz.CGEventCreateKeyboardEvent(None, key_code, True)
     up = Quartz.CGEventCreateKeyboardEvent(None, key_code, False)
