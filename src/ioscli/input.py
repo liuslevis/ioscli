@@ -8,7 +8,7 @@ import ApplicationServices as AX
 import Quartz
 from pypinyin import lazy_pinyin
 
-from .capture import capture_window, save_screenshot, screen_bbox
+from .capture import capture_window, get_cached_geometry, save_screenshot, screen_bbox
 from .window import Window, find_window
 
 _COMMAND_KEY_CODE = 55
@@ -79,15 +79,21 @@ def map_phone_to_screen(
     )
 
 
-def click(x: int, y: int) -> tuple[float, float]:
+def click(x: int, y: int, *, no_screenshot: bool = False) -> tuple[float, float]:
     window = find_window()
-    raw_image = capture_window(window.window_id)
-    bbox = screen_bbox(raw_image)
+    if no_screenshot:
+        geometry = get_cached_geometry(window)
+        raw_size = geometry.raw_size
+        bbox = geometry.bbox
+    else:
+        raw_image = capture_window(window.window_id)
+        raw_size = raw_image.size
+        bbox = screen_bbox(raw_image)
     screen_x, screen_y = map_phone_to_screen(
         x,
         y,
         window,
-        raw_image.size,
+        raw_size,
         bbox,
     )
     _activate_app(window.owner_pid)
@@ -95,22 +101,34 @@ def click(x: int, y: int) -> tuple[float, float]:
     return screen_x, screen_y
 
 
-def scroll(direction: str, x: int, y: int) -> tuple[float, float]:
+def scroll(
+    direction: str,
+    x: int,
+    y: int,
+    *,
+    no_screenshot: bool = False,
+) -> tuple[float, float]:
     if direction not in {"up", "down", "left", "right"}:
         raise ValueError(f"Unsupported scroll direction: {direction}")
 
     window = find_window()
-    raw_image = capture_window(window.window_id)
-    bbox = screen_bbox(raw_image)
+    if no_screenshot:
+        geometry = get_cached_geometry(window)
+        raw_size = geometry.raw_size
+        bbox = geometry.bbox
+    else:
+        raw_image = capture_window(window.window_id)
+        raw_size = raw_image.size
+        bbox = screen_bbox(raw_image)
     screen_x, screen_y = map_phone_to_screen(
         x,
         y,
         window,
-        raw_image.size,
+        raw_size,
         bbox,
     )
-    scale_x = raw_image.width / window.width
-    scale_y = raw_image.height / window.height
+    scale_x = raw_size[0] / window.width
+    scale_y = raw_size[1] / window.height
     page_size = round((bbox[3] - bbox[1]) / scale_y)
     screen_left = window.x + bbox[0] / scale_x
     screen_right = window.x + bbox[2] / scale_x

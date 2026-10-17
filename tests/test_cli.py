@@ -69,24 +69,47 @@ def test_home_command_goes_home(monkeypatch) -> None:
 
 
 def test_scroll_command_passes_direction_and_coordinate(monkeypatch) -> None:
-    calls: list[tuple[str, int, int]] = []
+    calls: list[tuple[str, int, int, bool]] = []
     monkeypatch.setattr(
         cli,
         "scroll",
-        lambda direction, x, y: calls.append((direction, x, y)) or (10.0, 20.0),
+        lambda direction, x, y, no_screenshot: (
+            calls.append((direction, x, y, no_screenshot)) or (10.0, 20.0)
+        ),
     )
 
     assert cli.main(["scroll", "down", "at", "100", "200"]) == 0
-    assert calls == [("down", 100, 200)]
+    assert calls == [("down", 100, 200, False)]
 
 
 def test_horizontal_scroll_command(monkeypatch) -> None:
-    calls: list[tuple[str, int, int]] = []
+    calls: list[tuple[str, int, int, bool]] = []
     monkeypatch.setattr(
         cli,
         "scroll",
-        lambda direction, x, y: calls.append((direction, x, y)) or (10.0, 20.0),
+        lambda direction, x, y, no_screenshot: (
+            calls.append((direction, x, y, no_screenshot)) or (10.0, 20.0)
+        ),
     )
 
-    assert cli.main(["scroll", "left", "at", "100", "200"]) == 0
-    assert calls == [("left", 100, 200)]
+    assert (
+        cli.main(
+            ["scroll", "left", "at", "100", "200", "--no-screenshot"]
+        )
+        == 0
+    )
+    assert calls == [("left", 100, 200, True)]
+
+
+def test_click_command_can_skip_screenshot(monkeypatch) -> None:
+    calls: list[tuple[int, int, bool]] = []
+    monkeypatch.setattr(
+        cli,
+        "click",
+        lambda x, y, no_screenshot: (
+            calls.append((x, y, no_screenshot)) or (10.0, 20.0)
+        ),
+    )
+
+    assert cli.main(["click", "100", "200", "--no-screenshot"]) == 0
+    assert calls == [(100, 200, True)]

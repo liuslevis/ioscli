@@ -44,11 +44,17 @@ uv run ioscli screenshot path/to/output.jpg
 # Click at pixel (x, y) relative to the phone screen's top-left corner
 uv run ioscli click 100 200
 
+# Reuse geometry from the latest screenshot instead of capturing before clicking
+uv run ioscli click 100 200 --no-screenshot
+
 # Scroll one phone-screen page at a coordinate
 uv run ioscli scroll down at 200 500
 uv run ioscli scroll up at 200 500
 uv run ioscli scroll left at 200 500
 uv run ioscli scroll right at 200 500
+
+# Avoid the coordinate-mapping screenshot (requires a prior screenshot)
+uv run ioscli scroll down at 200 500 --no-screenshot
 ```
 
 ### Input English / Chinese

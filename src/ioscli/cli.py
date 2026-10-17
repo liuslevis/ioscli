@@ -42,6 +42,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     click_parser.add_argument("x", type=int, help="Horizontal pixel coordinate")
     click_parser.add_argument("y", type=int, help="Vertical pixel coordinate")
+    click_parser.add_argument(
+        "--no-screenshot",
+        action="store_true",
+        help="Use geometry cached by the latest screenshot",
+    )
 
     scroll_parser = subparsers.add_parser(
         "scroll",
@@ -54,6 +59,11 @@ def build_parser() -> argparse.ArgumentParser:
     scroll_parser.add_argument("at", choices=("at",))
     scroll_parser.add_argument("x", type=int, help="Horizontal pixel coordinate")
     scroll_parser.add_argument("y", type=int, help="Vertical pixel coordinate")
+    scroll_parser.add_argument(
+        "--no-screenshot",
+        action="store_true",
+        help="Use geometry cached by the latest screenshot",
+    )
 
     input_parser = subparsers.add_parser(
         "input_paste",
@@ -121,10 +131,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.command == "screenshot":
             print(save_screenshot(args.path))
         elif args.command == "click":
-            screen_x, screen_y = click(args.x, args.y)
+            screen_x, screen_y = click(
+                args.x,
+                args.y,
+                no_screenshot=args.no_screenshot,
+            )
             print(f"Clicked at screen ({screen_x:.1f}, {screen_y:.1f})")
         elif args.command == "scroll":
-            screen_x, screen_y = scroll(args.direction, args.x, args.y)
+            screen_x, screen_y = scroll(
+                args.direction,
+                args.x,
+                args.y,
+                no_screenshot=args.no_screenshot,
+            )
             print(
                 f"Scrolled {args.direction} at screen "
                 f"({screen_x:.1f}, {screen_y:.1f})"
